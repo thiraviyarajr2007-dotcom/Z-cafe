@@ -23,7 +23,7 @@ export const Header: React.FC = () => {
     { href: '/', label: 'Home' },
     { href: '/menu', label: 'Menu' },
     { href: '/orders', label: 'My Orders' },
-    { href: '/admin', label: 'Staff & Scanner', icon: ShieldCheck },
+    { href: '/admin', label: 'Seller Portal', icon: ShieldCheck, isSeller: true },
   ];
 
   return (
@@ -48,14 +48,23 @@ export const Header: React.FC = () => {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`px-4 py-2 rounded-full text-xs lg:text-sm font-extrabold transition-all flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-extrabold transition-all flex items-center gap-1.5 ${
                       isActive
                         ? 'text-[#120A0C] bg-[#F7B52C] shadow-[0_2px_12px_rgba(247,181,44,0.4)]'
+                        : link.isSeller
+                        ? 'text-amber-200/90 hover:text-white bg-black/20 hover:bg-black/30 border border-amber-400/20'
                         : 'text-[#FFF8EE]/90 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {Icon && <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#120A0C]' : 'text-[#F7B52C]'}`} />}
-                    {link.label}
+                    <span>{link.label}</span>
+                    {link.isSeller && (
+                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase tracking-wider ${
+                        isActive ? 'bg-[#120A0C] text-[#F7B52C]' : 'bg-[#F7B52C] text-[#120A0C]'
+                      }`}>
+                        Staff
+                      </span>
+                    )}
                   </Link>
                 );
               })}

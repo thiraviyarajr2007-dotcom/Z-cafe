@@ -55,8 +55,8 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-[#F7B52C] transition-colors flex items-center gap-1 text-xs text-white/60 hover:text-white mt-4">
-                  Kitchen Portal / Admin &rarr;
+                <Link href="/admin" className="hover:text-[#F7B52C] transition-colors flex items-center gap-1 text-xs text-amber-300/80 hover:text-white mt-4 font-bold">
+                  <span>🔒 Canteen Seller &amp; Staff Portal &rarr;</span>
                 </Link>
               </li>
             </ul>

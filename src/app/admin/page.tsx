@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { 
   ChefHat, 
   Volume2, 
@@ -27,9 +28,15 @@ import {
   Users,
   Zap,
   ArrowRight,
+  ArrowLeft,
   ShieldCheck,
   XCircle,
-  Sliders
+  Sliders,
+  User,
+  LogOut,
+  Eye,
+  EyeOff,
+  KeyRound
 } from 'lucide-react';
 import { Order, OrderStatus, MenuItem } from '@/types';
 import { 
@@ -39,13 +46,24 @@ import {
   getLocalMenu,
   saveLocalMenu
 } from '@/lib/orders-db';
+import { 
+  SellerUser, 
+  PRESET_SELLER_ACCOUNTS, 
+  getSellerSession, 
+  loginSeller, 
+  logoutSeller 
+} from '@/lib/seller-auth';
 import { VegBadge } from '@/components/VegBadge';
 import { useCartStore } from '@/store/useCartStore';
 
 export default function AdminDashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState('');
+  const [sellerUser, setSellerUser] = useState<SellerUser | null>(null);
+  const [usernameInput, setUsernameInput] = useState('admin');
+  const [passwordInput, setPasswordInput] = useState('zcafe@2026');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberTerminal, setRememberTerminal] = useState(true);
+  const [authError, setAuthError] = useState('');
 
   const [activeTab, setActiveTab] = useState<'orders' | 'scanner' | 'menu' | 'crowd' | 'analytics'>('orders');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
@@ -69,6 +87,15 @@ export default function AdminDashboardPage() {
   const { crowdStatus, setCrowdStatus } = useCartStore();
 
   const prevOrdersCountRef = useRef(0);
+
+  // Restore seller session on terminal mount
+  useEffect(() => {
+    const existing = getSellerSession();
+    if (existing) {
+      setSellerUser(existing);
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   // Web Audio Synthesizer for Kitchen Chime (Zero external audio dependency)
   const playKitchenChime = () => {
@@ -108,14 +135,29 @@ export default function AdminDashboardPage() {
     return () => unsubscribe();
   }, [isAuthenticated, soundEnabled]);
 
-  const handlePinSubmit = (e: React.FormEvent) => {
+  const handleSellerLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === '7777' || pinInput === 'admin') {
+    const res = loginSeller(usernameInput, passwordInput, rememberTerminal);
+    if (res.success && res.user) {
+      setSellerUser(res.user);
       setIsAuthenticated(true);
-      setPinError('');
+      setAuthError('');
+      playKitchenChime();
     } else {
-      setPinError('Invalid PIN code. Default is: 7777');
+      setAuthError(res.error || 'Invalid credentials');
     }
+  };
+
+  const handleQuickFillAccount = (acc: typeof PRESET_SELLER_ACCOUNTS[0]) => {
+    setUsernameInput(acc.username);
+    setPasswordInput(acc.password);
+    setAuthError('');
+  };
+
+  const handleSellerLogout = () => {
+    logoutSeller();
+    setSellerUser(null);
+    setIsAuthenticated(false);
   };
 
   const handleStatusChange = async (orderId: string, nextStatus: OrderStatus) => {
@@ -201,39 +243,143 @@ export default function AdminDashboardPage() {
     m.category.toLowerCase().includes(searchMenuQuery.toLowerCase())
   );
 
-  // Authentication PIN screen
+  // Authentication Seller Screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#120A0C] flex items-center justify-center p-4">
-        <div className="rounded-3xl p-8 max-w-sm w-full bg-[#1e0e15] border border-white/10 text-center shadow-2xl text-white">
-          <div className="w-16 h-16 rounded-2xl bg-[#3E1220] text-[#F7B52C] flex items-center justify-center mx-auto mb-4 border border-[#F7B52C]/40 shadow-glow-gold">
-            <Lock className="w-8 h-8" />
-          </div>
-          <h2 className="text-xl font-black text-white font-display">Kitchen Admin Portal</h2>
-          <p className="text-xs text-white/60 mt-1 mb-6">
-            Canteen Owner & Staff Access. Master PIN: <strong>7777</strong>
-          </p>
+      <div className="min-h-screen bg-[#120A0C] flex flex-col items-center justify-center p-4 py-12 text-[#FFF8EE]">
+        {/* Top return navigation */}
+        <div className="flex items-center justify-between w-full max-w-xl mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-[#FFF8EE]/70 hover:text-[#F7B52C] transition-colors bg-white/5 px-3 py-1.5 rounded-full border border-white/10"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Return to Student App &amp; Menu
+          </Link>
+          <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20 flex items-center gap-1.5">
+            <Lock className="w-3 h-3" /> Seller Portal Only
+          </span>
+        </div>
 
-          <form onSubmit={handlePinSubmit} className="space-y-4">
-            <input
-              type="password"
-              maxLength={8}
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              placeholder="Enter PIN..."
-              className="w-full text-center text-xl tracking-[0.5em] font-mono py-3 rounded-2xl bg-[#120A0C] border border-white/15 text-white focus:outline-none focus:border-[#F7B52C]"
-              autoFocus
-            />
-            {pinError && (
-              <p className="text-xs text-rose-400 font-semibold">{pinError}</p>
+        {/* Main Seller Login Card */}
+        <div className="rounded-3xl p-6 sm:p-8 max-w-xl w-full bg-[#1b0d13] border border-white/10 shadow-2xl space-y-6">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5A1A2B] to-[#3E1220] text-[#F7B52C] flex items-center justify-center mx-auto mb-4 border border-[#F7B52C]/40 shadow-glow-gold">
+              <ChefHat className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-black text-white font-display">Canteen Seller Portal</h1>
+            <p className="text-xs text-white/60 mt-1.5 max-w-md mx-auto">
+              Separate backend terminal for Canteen Owner &amp; Kitchen Staff to manage orders, live stock, and QR tokens.
+            </p>
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={handleSellerLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-white/70 mb-1.5">
+                Seller Username or Staff ID
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                <input
+                  type="text"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  placeholder="e.g. admin or kitchen"
+                  required
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#120A0C] border border-white/15 text-white font-medium text-sm focus:outline-none focus:border-[#F7B52C] transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-white/70 mb-1.5">
+                Staff Password
+              </label>
+              <div className="relative">
+                <KeyRound className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="Enter seller password..."
+                  required
+                  className="w-full pl-10 pr-11 py-3 rounded-2xl bg-[#120A0C] border border-white/15 text-white font-medium text-sm focus:outline-none focus:border-[#F7B52C] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3.5 text-white/40 hover:text-white transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-white/60">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberTerminal}
+                  onChange={(e) => setRememberTerminal(e.target.checked)}
+                  className="rounded border-white/20 bg-white/5 text-[#F7B52C] focus:ring-0"
+                />
+                <span>Remember this terminal session</span>
+              </label>
+              <span className="text-[11px] text-[#F7B52C]/80 font-mono">Terminal: POS-KDS-01</span>
+            </div>
+
+            {authError && (
+              <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-300 font-semibold flex items-center gap-2">
+                <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{authError}</span>
+              </div>
             )}
+
             <button
               type="submit"
-              className="w-full py-3.5 rounded-2xl font-black text-sm bg-gradient-to-r from-[#F7B52C] to-[#FF9F1C] text-[#120A0C] hover:brightness-110 transition-all shadow-md"
+              className="w-full py-3.5 rounded-2xl font-black text-sm bg-gradient-to-r from-[#F7B52C] to-[#FF9F1C] text-[#120A0C] hover:brightness-110 active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-2"
             >
-              Unlock Kiosk
+              <Lock className="w-4 h-4 stroke-[2.5]" />
+              <span>Sign In to Seller Dashboard</span>
             </button>
           </form>
+
+          {/* Quick-Fill Pre-built Accounts */}
+          <div className="pt-5 border-t border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] uppercase tracking-wider font-extrabold text-[#F7B52C]">
+                ⚡ Pre-Configured Seller Accounts
+              </span>
+              <span className="text-[10px] text-white/40">Click any card to auto-fill</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {PRESET_SELLER_ACCOUNTS.map((acc) => (
+                <button
+                  key={acc.id}
+                  type="button"
+                  onClick={() => handleQuickFillAccount(acc)}
+                  className={`p-3 rounded-2xl text-left border transition-all ${
+                    usernameInput === acc.username
+                      ? 'bg-[#F7B52C]/10 border-[#F7B52C] text-white shadow-sm'
+                      : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{acc.avatar}</span>
+                    <span className="font-extrabold text-xs text-white truncate">{acc.role}</span>
+                  </div>
+                  <div className="text-[10px] text-[#F7B52C] font-mono font-bold truncate">
+                    user: {acc.username}
+                  </div>
+                  <div className="text-[10px] text-white/40 font-mono truncate">
+                    pass: {acc.password}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -296,6 +442,29 @@ export default function AdminDashboardPage() {
               }`}
             >
               {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+
+            {/* Seller Account Badge */}
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs">
+              <span className="text-base">{sellerUser?.avatar || '👨‍💼'}</span>
+              <div className="text-left">
+                <div className="font-bold text-white text-[11px] leading-tight">
+                  {sellerUser?.name || 'Canteen Staff'}
+                </div>
+                <div className="text-[10px] text-[#F7B52C] font-mono leading-none">
+                  {sellerUser?.role || 'Seller'} • {sellerUser?.terminalId || 'POS-01'}
+                </div>
+              </div>
+            </div>
+
+            {/* Logout Seller Button */}
+            <button
+              onClick={handleSellerLogout}
+              title="Log out of seller portal"
+              className="px-3 py-2 rounded-xl text-xs font-bold bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 flex items-center gap-1.5 transition-all active:scale-95"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
