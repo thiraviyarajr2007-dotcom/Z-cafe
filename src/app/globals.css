@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-primary: #3E1220;
+  --color-bg-charcoal: #120A0C;
+  --color-gold: #F7B52C;
+  --color-amber: #FF9F1C;
+  --color-cream: #FFF8EE;
+}
+
+body {
+  background-color: #120A0C;
+  color: #FFF8EE;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  overflow-x: hidden;
+}
+
+/* Vertical Fluted Wood-Slat Texture (simulating premium cafe walnut counter & wall cladding) */
+.bg-wood-slats {
+  background-color: #1a0c10;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(20, 10, 13, 0.95) 0px,
+    rgba(32, 16, 22, 0.95) 12px,
+    rgba(62, 18, 32, 0.8) 13px,
+    rgba(18, 10, 12, 0.95) 24px
+  );
+}
+
+.bg-burgundy-mesh {
+  background-color: #120A0C;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(90, 26, 43, 0.6) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(62, 18, 32, 0.5) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(247, 181, 44, 0.08) 0px, transparent 50%);
+}
+
+/* Warm Counter LED Glow Underneath */
+.counter-led-glow {
+  position: relative;
+}
+.counter-led-glow::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #FF9F1C, #F7B52C, #FF9F1C, transparent);
+  box-shadow: 0 4px 20px 4px rgba(255, 159, 28, 0.65);
+}
+
+/* Glassmorphism Card Style */
+.zcafe-card {
+  background: rgba(35, 14, 22, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(247, 181, 44, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.zcafe-card:hover {
+  border-color: rgba(247, 181, 44, 0.35);
+  box-shadow: 0 14px 40px -10px rgba(247, 181, 44, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Round Pill Button with Golden Glow */
+.btn-gold-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  background: linear-gradient(135deg, #F7B52C 0%, #FF9F1C 100%);
+  color: #120A0C;
+  box-shadow: 0 4px 15px rgba(247, 181, 44, 0.35);
+  transition: all 0.25s ease;
+}
+.btn-gold-pill:hover {
+  box-shadow: 0 6px 25px rgba(247, 181, 44, 0.65);
+  transform: translateY(-1px) scale(1.02);
+}
+.btn-gold-pill:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Outline Pill Button */
+.btn-outline-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1.5px solid rgba(247, 181, 44, 0.5);
+  background: rgba(18, 10, 12, 0.6);
+  backdrop-filter: blur(8px);
+  color: #FFF8EE;
+  transition: all 0.25s ease;
+}
+.btn-outline-pill:hover {
+  border-color: #F7B52C;
+  background: rgba(247, 181, 44, 0.12);
+  color: #F7B52C;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #120A0C;
+}
+::-webkit-scrollbar-thumb {
+  background: #4D1726;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F7B52C;
+}

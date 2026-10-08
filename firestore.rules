@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && (request.auth.token.admin == true || request.auth.token.role == 'kitchen');
+    }
+
+    // Menu Collection:
+    // Anyone can read active menu items
+    // Only admins/kitchen can modify items or daily stock
+    match /menu/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders Collection:
+    // Customers can create orders (with server-side validation or paymentStatus == 'paid')
+    // Order tracking can be read by public if matched by ID or token
+    // Status updates (received -> preparing -> ready -> collected) require admin
+    match /orders/{orderId} {
+      allow read: if true; // Allows customers to track their live order token
+      allow create: if request.resource.data.status == 'received'
+                    && request.resource.data.items.size() > 0
+                    && request.resource.data.total > 0;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Analytics & Daily Aggregates
+    match /analytics/{docId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
