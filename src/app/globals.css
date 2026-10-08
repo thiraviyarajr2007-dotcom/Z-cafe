@@ -3,41 +3,66 @@
 @tailwind utilities;
 
 :root {
-  --color-bg-primary: #3E1220;
-  --color-bg-charcoal: #120A0C;
-  --color-gold: #F7B52C;
-  --color-amber: #FF9F1C;
-  --color-cream: #FFF8EE;
+  --bg-page: #FFF8EE;
+  --bg-card: #FFFFFF;
+  --bg-card-border: rgba(90, 26, 43, 0.08);
+  --text-main: #2A0E17;
+  --text-muted: #6E535C;
+  --brand-maroon: #5A1A2B;
+  --brand-gold: #F7B52C;
+  --brand-green: #4F8F3A;
+  --brand-chilli: #E63946;
+}
+
+.dark {
+  --bg-page: #120A0C;
+  --bg-card: #1D0E14;
+  --bg-card-border: rgba(247, 181, 44, 0.15);
+  --text-main: #FFF8EE;
+  --text-muted: #DCCBBD;
+  --brand-maroon: #5A1A2B;
+  --brand-gold: #F7B52C;
+  --brand-green: #4F8F3A;
+  --brand-chilli: #E63946;
 }
 
 body {
-  background-color: #120A0C;
-  color: #FFF8EE;
+  background-color: var(--bg-page);
+  color: var(--text-main);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Vertical Fluted Wood-Slat Texture (simulating premium cafe walnut counter & wall cladding) */
+/* Warm subtle food-paper texture for Light mode */
+.bg-warm-canvas {
+  background-color: #FFF8EE;
+  background-image: radial-gradient(#E8D5C4 0.75px, transparent 0.75px), radial-gradient(#F5E6D8 0.75px, #FFF8EE 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+.dark .bg-warm-canvas {
+  background-color: #120A0C;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(90, 26, 43, 0.45) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(62, 18, 32, 0.35) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(247, 181, 44, 0.06) 0px, transparent 50%);
+}
+
+/* Vertical Fluted Wood-Slat Texture (brand accent) */
 .bg-wood-slats {
-  background-color: #1a0c10;
+  background-color: #3E1220;
   background-image: repeating-linear-gradient(
     90deg,
-    rgba(20, 10, 13, 0.95) 0px,
-    rgba(32, 16, 22, 0.95) 12px,
-    rgba(62, 18, 32, 0.8) 13px,
-    rgba(18, 10, 12, 0.95) 24px
+    rgba(35, 11, 19, 0.95) 0px,
+    rgba(62, 18, 32, 0.95) 12px,
+    rgba(90, 26, 43, 0.8) 13px,
+    rgba(35, 11, 19, 0.95) 24px
   );
 }
 
-.bg-burgundy-mesh {
-  background-color: #120A0C;
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(90, 26, 43, 0.6) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(62, 18, 32, 0.5) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(247, 181, 44, 0.08) 0px, transparent 50%);
-}
-
-/* Warm Counter LED Glow Underneath */
+/* Warm Counter LED Glow */
 .counter-led-glow {
   position: relative;
 }
@@ -49,22 +74,30 @@ body {
   right: 0;
   height: 2px;
   background: linear-gradient(90deg, transparent, #FF9F1C, #F7B52C, #FF9F1C, transparent);
-  box-shadow: 0 4px 20px 4px rgba(255, 159, 28, 0.65);
+  box-shadow: 0 4px 16px 2px rgba(247, 181, 44, 0.4);
 }
 
-/* Glassmorphism Card Style */
+/* Adaptive Card Style */
 .zcafe-card {
-  background: rgba(35, 14, 22, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(247, 181, 44, 0.15);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  background-color: #FFFFFF;
+  border: 1px solid rgba(90, 26, 43, 0.08);
+  box-shadow: 0 8px 24px -4px rgba(90, 26, 43, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .zcafe-card:hover {
-  border-color: rgba(247, 181, 44, 0.35);
-  box-shadow: 0 14px 40px -10px rgba(247, 181, 44, 0.18);
+  border-color: rgba(247, 181, 44, 0.45);
+  box-shadow: 0 16px 36px -8px rgba(90, 26, 43, 0.12), 0 4px 12px -2px rgba(247, 181, 44, 0.1);
   transform: translateY(-2px);
+}
+
+.dark .zcafe-card {
+  background-color: #1D0E14;
+  border-color: rgba(247, 181, 44, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+}
+.dark .zcafe-card:hover {
+  border-color: rgba(247, 181, 44, 0.4);
+  box-shadow: 0 14px 40px -10px rgba(247, 181, 44, 0.2);
 }
 
 /* Round Pill Button with Golden Glow */
@@ -75,15 +108,15 @@ body {
   gap: 0.5rem;
   padding: 0.75rem 1.75rem;
   border-radius: 9999px;
-  font-weight: 700;
-  letter-spacing: 0.025em;
-  background: linear-gradient(135deg, #F7B52C 0%, #FF9F1C 100%);
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  background: linear-gradient(135deg, #F7B52C 0%, #FFAF38 50%, #FF9F1C 100%);
   color: #120A0C;
-  box-shadow: 0 4px 15px rgba(247, 181, 44, 0.35);
+  box-shadow: 0 4px 16px rgba(247, 181, 44, 0.35);
   transition: all 0.25s ease;
 }
 .btn-gold-pill:hover {
-  box-shadow: 0 6px 25px rgba(247, 181, 44, 0.65);
+  box-shadow: 0 6px 24px rgba(247, 181, 44, 0.55);
   transform: translateY(-1px) scale(1.02);
 }
 .btn-gold-pill:active {
@@ -98,29 +131,78 @@ body {
   gap: 0.5rem;
   padding: 0.75rem 1.75rem;
   border-radius: 9999px;
-  font-weight: 600;
-  border: 1.5px solid rgba(247, 181, 44, 0.5);
-  background: rgba(18, 10, 12, 0.6);
-  backdrop-filter: blur(8px);
-  color: #FFF8EE;
+  font-weight: 700;
+  border: 2px solid #5A1A2B;
+  background: transparent;
+  color: #5A1A2B;
   transition: all 0.25s ease;
 }
 .btn-outline-pill:hover {
+  background: #5A1A2B;
+  color: #FFF8EE;
+}
+
+.dark .btn-outline-pill {
+  border-color: rgba(247, 181, 44, 0.6);
+  color: #FFF8EE;
+  background: rgba(18, 10, 12, 0.6);
+}
+.dark .btn-outline-pill:hover {
   border-color: #F7B52C;
-  background: rgba(247, 181, 44, 0.12);
+  background: rgba(247, 181, 44, 0.15);
   color: #F7B52C;
+}
+
+/* Sticker Badges */
+.sticker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Steam Animation */
+@keyframes steamRise {
+  0% {
+    transform: translateY(0) scaleX(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-15px) scaleX(1.3) translateX(2px);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-30px) scaleX(1.7) translateX(-2px);
+    opacity: 0;
+  }
+}
+
+.steam-path {
+  animation: steamRise 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.steam-path-2 {
+  animation: steamRise 3.2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s infinite;
+}
+.steam-path-3 {
+  animation: steamRise 3s cubic-bezier(0.4, 0, 0.2, 1) 1.6s infinite;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #120A0C;
+  background: var(--bg-page);
 }
 ::-webkit-scrollbar-thumb {
-  background: #4D1726;
+  background: #5A1A2B;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
