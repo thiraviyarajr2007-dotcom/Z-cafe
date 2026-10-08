@@ -1,9 +1,4 @@
 export type ItemCategory = 
-  | 'breakfast'
-  | 'lunch'
-  | 'evening-snacks'
-  | 'juices-beverages'
-  // Legacy aliases
   | 'snacks'
   | 'chicken-starters'
   | 'rice-biryani'
@@ -19,6 +14,7 @@ export interface SizeVariant {
 export interface MenuItem {
   id: string;
   name: string;
+  tamilName: string;
   category: ItemCategory;
   description: string;
   price: number; // Base price
@@ -26,20 +22,24 @@ export interface MenuItem {
   isVeg: boolean;
   image: string;
   isBestseller?: boolean;
+  isSpicy?: boolean;
   isAvailable: boolean;
   prepTimeMinutes: number; // For scheduling slots
-  prepTimeRange?: string; // e.g. "10–15 min"
+  prepTimeRange?: string; // e.g. "8–10 min"
   ingredients?: string[];
   dailyStock?: number;
   remainingStock?: number;
-  tag?: string; // e.g. "Hot Seller", "Campus Favorite"
-  modelType?: 'biryani' | 'juice' | 'samosa' | 'sandwich' | 'coffee' | 'noodles';
+  tag?: string; // e.g. "Bestseller", "Spicy", "Fresh Today", "Only 5 left"
+  spiceLevel?: 'Mild' | 'Medium' | 'Spicy';
+  blurDataURL?: string;
+  emoji?: string;
 }
 
 export interface CartItem {
   id: string; // Composite ID: itemId + (variant ? `-${variant}` : '')
   menuItemId: string;
   name: string;
+  tamilName?: string;
   price: number;
   quantity: number;
   selectedSize?: string;
@@ -53,6 +53,7 @@ export type OrderStatus = 'received' | 'accepted' | 'preparing' | 'ready' | 'col
 export interface OrderItem {
   menuItemId: string;
   name: string;
+  tamilName?: string;
   size?: string;
   price: number;
   quantity: number;
@@ -100,7 +101,7 @@ export interface PickupSlot {
   label: string; // "11:30 AM – 11:40 AM"
   start: string;
   end: string;
-  capacity: number; // e.g. 20
+  capacity: number;
   booked: number;
   status: 'available' | 'moderate' | 'full';
   breakTag?: string; // e.g. "Morning Break", "Lunch Break"

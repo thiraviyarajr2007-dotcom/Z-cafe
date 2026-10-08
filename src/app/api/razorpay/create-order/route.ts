@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     let calculatedSubtotal = 0;
 
     for (const cartItem of items) {
-      const dbItem = INITIAL_MENU.find((m) => m.id === cartItem.menuItemId);
+      const dbItem = INITIAL_MENU.find((m: { id: string }) => m.id === cartItem.menuItemId);
       if (!dbItem) {
         return NextResponse.json(
           { success: false, message: `Invalid item: ${cartItem.name}` },
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
       let unitPrice = dbItem.price;
       if (cartItem.selectedSize && dbItem.sizeVariants) {
-        const variant = dbItem.sizeVariants.find((v) => v.name === cartItem.selectedSize);
+        const variant = dbItem.sizeVariants.find((v: { name: string }) => v.name === cartItem.selectedSize);
         if (variant) unitPrice = variant.price;
       }
 

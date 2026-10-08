@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useCartStore } from '@/store/useCartStore';
 import { VegBadge } from '@/components/VegBadge';
-import { X, Clock, Plus, Minus, ShoppingBag, Sparkles, CheckCircle2, Flame, Heart } from 'lucide-react';
+import { X, Clock, Plus, Minus, ShoppingBag, Sparkles, CheckCircle2, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DEFAULT_BLUR_DATA_URL } from '@/data/menu';
 
 export function FoodDetailSheet() {
   const { activeItemForDetail, setActiveItemForDetail, addItem } = useCartStore();
@@ -14,6 +15,7 @@ export function FoodDetailSheet() {
   const [notes, setNotes] = useState('');
   const [isAdded, setIsAdded] = useState(false);
   const [spiceLevel, setSpiceLevel] = useState<'Mild' | 'Medium' | 'Spicy'>('Medium');
+  const [imgError, setImgError] = useState(false);
 
   if (!activeItemForDetail) return null;
 
@@ -23,7 +25,7 @@ export function FoodDetailSheet() {
   const currentPrice = activeVariant ? activeVariant.price : item.price;
 
   // Determine if dish is spicy eligible
-  const isSpicyDish = !item.isVeg || item.name.toLowerCase().includes('biryani') || item.name.toLowerCase().includes('65') || item.name.toLowerCase().includes('noodles');
+  const isSpicyDish = item.isSpicy || !item.isVeg || item.category === 'chicken-starters' || item.category === 'rice-biryani' || item.category === 'noodles';
 
   const handleAddToCart = () => {
     const finalNotes = [
@@ -77,16 +79,27 @@ export function FoodDetailSheet() {
           </button>
 
           {/* Hero Dish Image */}
-          <div className="relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden mb-5 bg-[#F5EBE1] dark:bg-[#120A0C] border border-black/5 dark:border-white/10 shadow-inner">
-            <Image
-              src={item.image}
-              alt={item.name}
-              fill
-              sizes="(max-width: 768px) 100vw, 600px"
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:opacity-80" />
+          <div className="relative w-full h-56 sm:h-72 rounded-2xl overflow-hidden mb-5 bg-[#FFF0DB] dark:bg-[#120A0C] border border-black/5 dark:border-white/10 shadow-inner flex items-center justify-center">
+            {!imgError ? (
+              <Image
+                src={item.image}
+                alt={item.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 600px"
+                className="object-cover"
+                priority
+                placeholder="blur"
+                blurDataURL={item.blurDataURL || DEFAULT_BLUR_DATA_URL}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center p-6">
+                <span className="text-6xl mb-2">{item.emoji || '🍽️'}</span>
+                <span className="text-sm font-black text-[#5A1A2B] dark:text-[#F7B52C]">{item.name}</span>
+              </div>
+            )}
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
             {/* Badges on Top */}
             <div className="absolute top-3 left-3 flex items-center gap-2">
@@ -112,14 +125,19 @@ export function FoodDetailSheet() {
                 <h2 className="text-2xl sm:text-3xl font-black text-[#5A1A2B] dark:text-[#FFF8EE] tracking-tight font-display">
                   {item.name}
                 </h2>
+                {item.tamilName && (
+                  <p className="text-xs text-[#E63946] dark:text-[#F7B52C] font-bold mt-0.5">
+                    {item.tamilName}
+                  </p>
+                )}
                 <div className="flex items-center gap-2 mt-1">
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-[#4F8F3A]">
                     <span className="w-2 h-2 rounded-full bg-[#4F8F3A] animate-pulse" />
-                    Hot & Fresh Today
+                    Hot &amp; Fresh Today
                   </span>
                   {item.dailyStock && (
                     <span className="text-xs text-[#E63946] font-semibold">
-                      • Daily Batch Limited
+                      &bull; Fresh Batch Available
                     </span>
                   )}
                 </div>
@@ -161,6 +179,25 @@ export function FoodDetailSheet() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Ingredients Breakdown */}
+          {item.ingredients && item.ingredients.length > 0 && (
+            <div className="mb-4 p-3 rounded-2xl bg-white dark:bg-white/5 border border-black/5 dark:border-white/10">
+              <span className="text-[11px] font-black uppercase tracking-wider text-[#5A1A2B] dark:text-[#F7B52C] flex items-center gap-1.5 mb-2">
+                <Sparkles className="w-3.5 h-3.5" /> Key Ingredients
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {item.ingredients.map((ing) => (
+                  <span
+                    key={ing}
+                    className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#FFF0DB] dark:bg-white/10 text-[#5A1A2B] dark:text-[#FFF8EE]"
+                  >
+                    {ing}
+                  </span>
+                ))}
               </div>
             </div>
           )}
