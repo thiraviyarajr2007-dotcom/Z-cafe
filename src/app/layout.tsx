@@ -19,33 +19,33 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: 'Z CAFÉ | Little Joy in Every Puff • Authentic Indian Snacks & Filter Coffee',
+  title: 'ZCafe | Order Ahead. Skip the Crowd. • College Canteen Pre-Order & Food Commerce',
   description:
-    'Order fresh Indian snacks, chicken 65, dum biryani, noodles, fresh juices and authentic filter coffee from Z CAFÉ. Skip the food court queue with instant pre-order and pickup tokens.',
+    'ZCafe reduces college break time crowding with instant pre-ordering, crowd tracking, smart pickup slots, and QR token collection. Your Food. Your Time. Zero Waiting.',
   keywords: [
-    'Z Cafe',
-    'Z CAFÉ',
-    'Indian Cafe',
+    'ZCafe',
+    'College Canteen Pre-Order',
+    'Skip the Queue',
+    'Campus Food Commerce',
+    'QR Token Pickup',
+    'Biryani',
     'Samosa',
-    'Egg Puff',
-    'Chicken 65',
-    'Dum Biryani',
-    'Filter Coffee',
-    'Pre-order food court',
-    'Indian snacks kiosk'
+    'Breakfast',
+    'Fruit Juices',
+    'Canteen Crowd Management'
   ],
-  authors: [{ name: 'Z Cafe Culinary Team' }],
+  authors: [{ name: 'ZCafe Food-Tech Engineering' }],
   openGraph: {
-    title: 'Z CAFÉ | Authentic Indian Snacks, Biryani & Filter Coffee',
-    description: 'Little Joy in Every Puff. Skip the food court line with instant pre-ordering.',
+    title: 'ZCafe | Order Ahead. Skip the Crowd.',
+    description: 'Your Food. Your Time. Zero Waiting. Pre-order from your phone and scan your QR code at the counter.',
     url: 'https://zcafe.in',
-    siteName: 'Z CAFÉ',
+    siteName: 'ZCafe',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=1200&h=630&fit=crop',
+        url: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200&h=630&fit=crop',
         width: 1200,
         height: 630,
-        alt: 'Z CAFÉ Fresh Indian Snacks & Steaming Coffee',
+        alt: 'ZCafe 3D Food Commerce Platform',
       },
     ],
     locale: 'en_IN',
@@ -66,30 +66,14 @@ export default function RootLayout({
 }) {
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'CafeOrCoffeeShop',
-    name: 'Z CAFÉ',
-    image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950',
-    description: 'Authentic Indian food kiosk serving fresh puffs, samosas, Chicken 65, biryani and filter coffee.',
+    '@type': 'FastFoodRestaurant',
+    name: 'ZCafe',
+    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8',
+    description: 'College canteen food-tech pre-order platform eliminating break queues.',
     servesCuisine: 'Indian',
-    priceRange: '₹15 - ₹180',
+    priceRange: '₹15 - ₹165',
     currenciesAccepted: 'INR',
-    paymentAccepted: 'Cash, UPI, Credit Card, Razorpay',
-    openingHoursSpecification: [
-      {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: [
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-          'Sunday',
-        ],
-        opens: '10:00',
-        closes: '22:30',
-      },
-    ],
+    paymentAccepted: 'UPI, GPay, PhonePe, Cards, NetBanking',
   };
 
   return (

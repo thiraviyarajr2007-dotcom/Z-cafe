@@ -1,15 +1,22 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { CartItem, MenuItem } from '@/types';
+import { CartItem, MenuItem, StudentUser, PickupSlot } from '@/types';
+import { PICKUP_SLOTS } from '@/data/menu';
 
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
-  pickupSlot: string;
+  pickupSlot: string; // "11:20 AM – 11:30 AM"
+  pickupSlotId: string;
   customerName: string;
   customerPhone: string;
+  studentId: string;
+  department: string;
+  studentUser: StudentUser | null;
   couponCode: string;
   discount: number;
+  crowdStatus: 'normal' | 'moderate' | 'high';
+  activeItemForDetail: MenuItem | null;
   
   // Actions
   setIsOpen: (isOpen: boolean) => void;
@@ -18,8 +25,11 @@ interface CartStore {
   updateQuantity: (id: string, delta: number) => void;
   updateNotes: (id: string, notes: string) => void;
   clearCart: () => void;
-  setPickupSlot: (slot: string) => void;
-  setCustomerInfo: (name: string, phone: string) => void;
+  setPickupSlot: (slot: string, slotId?: string) => void;
+  setCustomerInfo: (name: string, phone: string, studentId?: string, department?: string) => void;
+  setStudentUser: (user: StudentUser | null) => void;
+  setCrowdStatus: (status: 'normal' | 'moderate' | 'high') => void;
+  setActiveItemForDetail: (item: MenuItem | null) => void;
   applyCoupon: (code: string) => { success: boolean; message: string };
   removeCoupon: () => void;
   
@@ -35,13 +45,28 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
-      pickupSlot: 'ASAP (10-15 mins)',
-      customerName: '',
-      customerPhone: '',
+      pickupSlot: '11:20 AM – 11:30 AM',
+      pickupSlotId: 'slot-1120',
+      customerName: 'Paranitharan',
+      customerPhone: '9876543210',
+      studentId: 'RATH2024CS042',
+      department: 'Computer Science (3rd Yr)',
+      studentUser: {
+        id: 'std-104',
+        fullName: 'Paranitharan',
+        collegeDepartment: 'Computer Science & Engg (3rd Yr)',
+        studentId: 'RATH2024CS042',
+        mobileNumber: '9876543210',
+        email: 'parani.cs24@rathinam.ac.in',
+      },
       couponCode: '',
       discount: 0,
+      crowdStatus: 'normal',
+      activeItemForDetail: null,
 
       setIsOpen: (isOpen) => set({ isOpen }),
+
+      setActiveItemForDetail: (item) => set({ activeItemForDetail: item }),
 
       addItem: (item, selectedSize, notes = '') => {
         const sizeVariant = item.sizeVariants?.find(v => v.name === selectedSize);
@@ -107,10 +132,28 @@ export const useCartStore = create<CartStore>()(
         set({ items: [], couponCode: '', discount: 0 });
       },
 
-      setPickupSlot: (slot) => set({ pickupSlot: slot }),
+      setPickupSlot: (slot, slotId) => set({ 
+        pickupSlot: slot,
+        pickupSlotId: slotId || 'slot-1120'
+      }),
 
-      setCustomerInfo: (customerName, customerPhone) =>
-        set({ customerName, customerPhone }),
+      setCustomerInfo: (customerName, customerPhone, studentId, department) =>
+        set((state) => ({ 
+          customerName, 
+          customerPhone,
+          studentId: studentId || state.studentId,
+          department: department || state.department
+        })),
+
+      setStudentUser: (user) => set({
+        studentUser: user,
+        customerName: user ? user.fullName : '',
+        customerPhone: user ? user.mobileNumber : '',
+        studentId: user ? user.studentId : '',
+        department: user ? user.collegeDepartment : '',
+      }),
+
+      setCrowdStatus: (status) => set({ crowdStatus: status }),
 
       applyCoupon: (code: string) => {
         const clean = code.trim().toUpperCase();
@@ -122,12 +165,12 @@ export const useCartStore = create<CartStore>()(
           const discount = Math.min(50, Math.round(subtotal * 0.2));
           set({ couponCode: clean, discount });
           return { success: true, message: `Coupon ${clean} applied! You saved ₹${discount}` };
-        } else if (clean === 'FIRST10') {
+        } else if (clean === 'COLLEGE10' || clean === 'FIRST10') {
           const discount = Math.round(subtotal * 0.1);
           set({ couponCode: clean, discount });
-          return { success: true, message: `10% discount applied! You saved ₹${discount}` };
+          return { success: true, message: `Campus student 10% discount applied! You saved ₹${discount}` };
         } else {
-          return { success: false, message: 'Invalid coupon code. Try ZCAFE50 or FIRST10' };
+          return { success: false, message: 'Invalid coupon. Try COLLEGE10 or ZCAFE50' };
         }
       },
 
@@ -143,7 +186,7 @@ export const useCartStore = create<CartStore>()(
       getGst: () => {
         const subtotal = get().getSubtotal();
         const discounted = Math.max(0, subtotal - get().discount);
-        return Math.round(discounted * 0.05); // 5% GST for restaurant/kiosk
+        return Math.round(discounted * 0.05); // 5% GST
       },
 
       getTotal: () => {
@@ -159,7 +202,7 @@ export const useCartStore = create<CartStore>()(
       },
     }),
     {
-      name: 'zcafe-cart-storage',
+      name: 'zcafe-cart-storage-v2',
       storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : {
         getItem: () => null,
         setItem: () => {},
@@ -168,8 +211,13 @@ export const useCartStore = create<CartStore>()(
       partialize: (state) => ({
         items: state.items,
         pickupSlot: state.pickupSlot,
+        pickupSlotId: state.pickupSlotId,
         customerName: state.customerName,
         customerPhone: state.customerPhone,
+        studentId: state.studentId,
+        department: state.department,
+        studentUser: state.studentUser,
+        crowdStatus: state.crowdStatus,
       }),
     }
   )

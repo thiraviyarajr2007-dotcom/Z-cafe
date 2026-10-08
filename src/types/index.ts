@@ -1,4 +1,9 @@
 export type ItemCategory = 
+  | 'breakfast'
+  | 'lunch'
+  | 'evening-snacks'
+  | 'juices-beverages'
+  // Legacy aliases
   | 'snacks'
   | 'chicken-starters'
   | 'rice-biryani'
@@ -23,9 +28,12 @@ export interface MenuItem {
   isBestseller?: boolean;
   isAvailable: boolean;
   prepTimeMinutes: number; // For scheduling slots
-  dailyStock?: number; // Optional stock cap
+  prepTimeRange?: string; // e.g. "10–15 min"
+  ingredients?: string[];
+  dailyStock?: number;
   remainingStock?: number;
-  tag?: string; // e.g. "Chef Special", "Spicy"
+  tag?: string; // e.g. "Hot Seller", "Campus Favorite"
+  modelType?: 'biryani' | 'juice' | 'samosa' | 'sandwich' | 'coffee' | 'noodles';
 }
 
 export interface CartItem {
@@ -40,7 +48,7 @@ export interface CartItem {
   image: string;
 }
 
-export type OrderStatus = 'received' | 'preparing' | 'ready' | 'collected' | 'cancelled';
+export type OrderStatus = 'received' | 'accepted' | 'preparing' | 'ready' | 'collected' | 'cancelled';
 
 export interface OrderItem {
   menuItemId: string;
@@ -52,24 +60,59 @@ export interface OrderItem {
   isVeg: boolean;
 }
 
+export interface OrderTimelineStep {
+  label: string;
+  timestamp?: number;
+  completed: boolean;
+  current: boolean;
+}
+
 export interface Order {
   id: string;
-  token: string; // e.g. "Z-0247"
+  token: string; // e.g. "104" or "ZC-20261008-104"
+  tokenNumber: number; // 104
   customerName: string;
   customerPhone: string;
+  studentId?: string;
+  department?: string;
   items: OrderItem[];
   subtotal: number;
   gst: number; // 5%
   discount: number;
   total: number;
   status: OrderStatus;
-  pickupSlot: string; // e.g. "ASAP (15 mins)", "12:45 PM"
+  pickupSlot: string; // e.g. "12:20 PM – 12:30 PM"
+  pickupDate: string; // e.g. "08 October 2026"
   paymentId?: string;
   razorpayOrderId?: string;
   paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentMethod?: 'UPI' | 'Card' | 'NetBanking' | 'CashAtCounter';
   createdAt: number;
   updatedAt: number;
+  collectedAt?: number;
+  isQrUsed?: boolean;
   estimatedReadyTime?: number;
+  whatsappSent?: boolean;
+}
+
+export interface PickupSlot {
+  id: string;
+  label: string; // "11:30 AM – 11:40 AM"
+  start: string;
+  end: string;
+  capacity: number; // e.g. 20
+  booked: number;
+  status: 'available' | 'moderate' | 'full';
+  breakTag?: string; // e.g. "Morning Break", "Lunch Break"
+}
+
+export interface StudentUser {
+  id: string;
+  fullName: string;
+  collegeDepartment: string;
+  studentId: string;
+  mobileNumber: string;
+  email: string;
 }
 
 export interface DailySalesSummary {
@@ -77,4 +120,6 @@ export interface DailySalesSummary {
   totalRevenue: number;
   topItems: { name: string; count: number; revenue: number }[];
   activeOrdersCount: number;
+  completedOrdersCount: number;
+  pendingOrdersCount: number;
 }

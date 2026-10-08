@@ -37,3 +37,8 @@ next-env.d.ts
 
 # service accounts
 serviceAccountKey.json
+
+# IDE and local configs
+.vscode/
+.claude/
+.vexp/

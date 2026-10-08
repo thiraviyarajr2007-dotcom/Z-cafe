@@ -15,21 +15,16 @@ import {
   CheckCircle2,
   Phone,
   User,
-  MessageSquare
+  GraduationCap,
+  MessageSquare,
+  Users
 } from 'lucide-react';
 import { useCartStore } from '@/store/useCartStore';
 import { VegBadge } from './VegBadge';
 import { RazorpayModal } from './RazorpayModal';
+import { PICKUP_SLOTS } from '@/data/menu';
 
-const PRESET_SLOTS = [
-  'ASAP (10-15 mins)',
-  'In 20 mins',
-  'In 30 mins',
-  'In 45 mins',
-  'In 1 hour',
-];
-
-const QUICK_NOTES = ['Less spicy', 'Extra gravy', 'Less sugar', 'No onions', 'Serve hot'];
+const QUICK_NOTES = ['Less spicy', 'Extra gravy', 'Less sugar', 'No onions', 'Serve piping hot'];
 
 export const CartDrawer: React.FC = () => {
   const router = useRouter();
@@ -42,9 +37,13 @@ export const CartDrawer: React.FC = () => {
     updateNotes,
     clearCart,
     pickupSlot,
+    pickupSlotId,
     setPickupSlot,
     customerName,
     customerPhone,
+    studentId,
+    department,
+    studentUser,
     setCustomerInfo,
     couponCode,
     discount,
@@ -59,7 +58,7 @@ export const CartDrawer: React.FC = () => {
   const [couponFeedback, setCouponFeedback] = useState<{ message: string; isError?: boolean } | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [phoneError, setPhoneError] = useState('');
+  const [formError, setFormError] = useState('');
 
   if (!isOpen) return null;
 
@@ -67,9 +66,9 @@ export const CartDrawer: React.FC = () => {
   const gst = getGst();
   const total = getTotal();
 
-  // Check if items include Biryani or heavy starters that need more prep time
-  const hasBiryaniOrStarter = items.some(
-    (i) => i.name.toLowerCase().includes('biryani') || i.name.toLowerCase().includes('lollipop')
+  // Check if items include Biryani or heavy items that need prep time
+  const hasHeavyItem = items.some(
+    (i) => i.name.toLowerCase().includes('biryani') || i.name.toLowerCase().includes('noodles')
   );
 
   const handleApplyCoupon = (e: React.FormEvent) => {
@@ -81,15 +80,15 @@ export const CartDrawer: React.FC = () => {
 
   const handleProceedToPayment = () => {
     if (!customerName.trim()) {
-      setPhoneError('Please enter your name for pickup');
+      setFormError('Please enter your full name for counter pickup');
       return;
     }
     const cleanPhone = customerPhone.replace(/\D/g, '');
     if (cleanPhone.length < 10) {
-      setPhoneError('Please enter a valid 10-digit mobile number');
+      setFormError('Please enter a valid 10-digit mobile number for QR token');
       return;
     }
-    setPhoneError('');
+    setFormError('');
     setShowCheckoutModal(true);
   };
 
@@ -98,265 +97,335 @@ export const CartDrawer: React.FC = () => {
       <div className="fixed inset-0 z-50 overflow-hidden">
         {/* Backdrop */}
         <div
+          className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
           onClick={() => setIsOpen(false)}
-          className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
         />
 
         <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-          <div className="w-screen max-w-md bg-[#160B0E] border-l border-[#3E1220] text-[#FFF8EE] shadow-2xl flex flex-col justify-between">
-            
-            {/* Drawer Header */}
-            <div className="px-5 py-4 border-b border-[#3E1220] flex items-center justify-between bg-[#120A0C]/90">
+          <div className="w-screen max-w-md bg-gradient-to-b from-[#220e15] to-[#120A0C] border-l border-[#F7B52C]/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] flex flex-col text-[#FFF8EE]">
+            {/* Header */}
+            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#19090e]">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-[#3E1220] text-[#F7B52C]">
+                <div className="p-2 rounded-xl bg-[#F7B52C]/20 text-[#F7B52C]">
                   <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white font-display">Your Order</h2>
-                  <p className="text-xs text-[#FFF8EE]/60">
-                    {items.length} {items.length === 1 ? 'item' : 'items'} in pre-order
-                  </p>
+                  <h2 className="font-extrabold text-lg text-[#FFF8EE] flex items-center gap-2">
+                    Pre-Order Cart
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-[#F7B52C] text-[#120A0C] font-black">
+                      {items.reduce((acc, i) => acc + i.quantity, 0)}
+                    </span>
+                  </h2>
+                  <p className="text-[11px] text-[#FFF8EE]/60">Skip the college break counter rush</p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-2 rounded-full hover:bg-[#3E1220] text-[#FFF8EE]/70 hover:text-white transition-colors"
-                aria-label="Close cart"
+                className="p-2 rounded-full hover:bg-white/10 text-[#FFF8EE]/70 hover:text-[#FFF8EE] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
               {items.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#3E1220]/60 flex items-center justify-center text-3xl">
-                    🥟
+                <div className="py-16 text-center">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-white/5 flex items-center justify-center text-[#F7B52C]/40 mb-4 border border-white/10">
+                    <ShoppingBag className="w-10 h-10" />
                   </div>
-                  <h3 className="text-base font-bold text-white">Your cart is empty</h3>
-                  <p className="text-xs text-[#FFF8EE]/60 max-w-xs mx-auto mt-1 mb-6">
-                    Craving hot samosas, crispy puffs or authentic filter coffee? Add some joy to your cart!
+                  <h3 className="text-lg font-bold text-[#FFF8EE]">Your Cart is Empty</h3>
+                  <p className="text-xs text-[#FFF8EE]/60 max-w-xs mx-auto mt-1">
+                    Select your favorite breakfast, biryani, evening snacks, or fresh juices before the break begins!
                   </p>
                   <button
+                    type="button"
                     onClick={() => {
                       setIsOpen(false);
                       router.push('/menu');
                     }}
-                    className="btn-gold-pill text-xs py-2 px-5"
+                    className="mt-6 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#F7B52C] to-[#FF9F1C] text-[#120A0C] font-extrabold text-xs shadow-lg hover:scale-105 transition-all"
                   >
-                    Explore Menu
+                    Browse Canteen Menu
                   </button>
                 </div>
               ) : (
                 <>
-                  {/* Biryani prep time notice */}
-                  {hasBiryaniOrStarter && (
-                    <div className="p-3 rounded-xl bg-[#5A1A2B]/40 border border-[#F7B52C]/40 text-xs flex items-start gap-2.5 text-[#FFF8EE]/90">
-                      <Clock className="w-4 h-4 text-[#F7B52C] shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="text-[#F7B52C]">Fresh Preparation Notice:</strong> Your order contains Biryani / fresh starters. Minimum preparation time is 15–20 minutes to serve piping hot.
-                      </div>
+                  {/* Item List */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs text-[#FFF8EE]/60 uppercase tracking-wider font-bold">
+                      <span>Selected Items</span>
+                      <button
+                        type="button"
+                        onClick={clearCart}
+                        className="text-red-400 hover:text-red-300 flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" /> Clear All
+                      </button>
                     </div>
-                  )}
 
-                  {/* Items List */}
-                  <div className="space-y-3.5">
                     {items.map((item) => (
                       <div
                         key={item.id}
-                        className="p-3 rounded-xl bg-[#1F0E14] border border-[#3E1220] hover:border-[#F7B52C]/30 transition-all space-y-2"
+                        className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-white/20 transition-all"
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-2.5">
-                            <VegBadge isVeg={item.isVeg} size="sm" className="mt-1" />
+                          <div className="flex items-center gap-2.5 flex-1">
+                            <VegBadge isVeg={item.isVeg} size="sm" />
                             <div>
-                              <div className="text-sm font-bold text-white leading-tight">
+                              <h4 className="font-bold text-sm text-[#FFF8EE] leading-snug">
                                 {item.name}
-                              </div>
+                              </h4>
                               {item.selectedSize && (
-                                <div className="text-xs text-[#F7B52C] font-semibold mt-0.5">
-                                  Size: {item.selectedSize}
-                                </div>
+                                <span className="inline-block text-[11px] text-[#F7B52C] font-semibold">
+                                  {item.selectedSize}
+                                </span>
                               )}
-                              <div className="text-xs text-[#FFF8EE]/60 mt-0.5">
+                              <div className="text-xs font-bold text-[#FFF8EE]/80 mt-0.5">
                                 ₹{item.price} each
                               </div>
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <div className="text-sm font-extrabold text-[#F7B52C]">
-                              ₹{item.price * item.quantity}
-                            </div>
+                          {/* Stepper */}
+                          <div className="flex items-center gap-1.5 bg-[#120A0C] border border-white/15 rounded-xl px-2 py-1">
                             <button
-                              onClick={() => removeItem(item.id)}
-                              className="text-xs text-rose-400/80 hover:text-rose-400 transition-colors mt-1 flex items-center gap-1 ml-auto"
-                              aria-label="Remove item"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Quantity Stepper & Notes Toggle */}
-                        <div className="flex items-center justify-between pt-2 border-t border-[#3E1220]/60 text-xs">
-                          <button
-                            onClick={() =>
-                              setEditingNotesId(editingNotesId === item.id ? null : item.id)
-                            }
-                            className="text-[#FFF8EE]/70 hover:text-[#F7B52C] flex items-center gap-1"
-                          >
-                            <MessageSquare className="w-3 h-3" />
-                            {item.notes ? (
-                              <span className="italic text-[#F7B52C] truncate max-w-[140px]">
-                                Note: &ldquo;{item.notes}&rdquo;
-                              </span>
-                            ) : (
-                              '+ Add cooking note'
-                            )}
-                          </button>
-
-                          <div className="flex items-center gap-2 bg-[#120A0C] border border-[#3E1220] rounded-full px-2 py-0.5">
-                            <button
+                              type="button"
                               onClick={() => updateQuantity(item.id, -1)}
-                              className="w-5 h-5 rounded-full text-[#F7B52C] hover:bg-[#3E1220] flex items-center justify-center font-bold"
+                              className="text-[#F7B52C] hover:text-white p-0.5"
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <span className="font-bold text-white min-w-[1rem] text-center">
+                            <span className="font-bold text-xs text-[#FFF8EE] w-5 text-center">
                               {item.quantity}
                             </span>
                             <button
+                              type="button"
                               onClick={() => updateQuantity(item.id, 1)}
-                              className="w-5 h-5 rounded-full text-[#F7B52C] hover:bg-[#3E1220] flex items-center justify-center font-bold"
+                              className="text-[#F7B52C] hover:text-white p-0.5"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
 
-                        {/* Inline Item Notes Form */}
-                        {editingNotesId === item.id && (
-                          <div className="pt-2 border-t border-[#3E1220] space-y-1.5">
-                            <input
-                              type="text"
-                              value={item.notes || ''}
-                              onChange={(e) => updateNotes(item.id, e.target.value)}
-                              placeholder="e.g. less spicy, extra gravy, less sugar..."
-                              className="w-full text-xs px-2.5 py-1.5 rounded-lg bg-[#120A0C] border border-[#3E1220] text-white focus:outline-none focus:border-[#F7B52C]"
-                            />
-                            <div className="flex flex-wrap gap-1">
-                              {QUICK_NOTES.map((qn) => (
-                                <button
-                                  key={qn}
-                                  type="button"
-                                  onClick={() => updateNotes(item.id, qn)}
-                                  className="text-[10px] px-2 py-0.5 rounded-full bg-[#3E1220] text-[#FFF8EE]/80 hover:text-[#F7B52C] hover:bg-[#4D1726]"
-                                >
-                                  {qn}
-                                </button>
-                              ))}
+                        {/* Notes snippet or input */}
+                        <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+                          {editingNotesId === item.id ? (
+                            <div className="w-full space-y-1.5">
+                              <input
+                                type="text"
+                                placeholder="e.g. less spicy, extra gravy..."
+                                defaultValue={item.notes || ''}
+                                onBlur={(e) => {
+                                  updateNotes(item.id, e.target.value);
+                                  setEditingNotesId(null);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    updateNotes(item.id, (e.target as any).value);
+                                    setEditingNotesId(null);
+                                  }
+                                }}
+                                autoFocus
+                                className="w-full px-2.5 py-1 rounded-lg bg-black/50 border border-[#F7B52C] text-xs text-white focus:outline-none"
+                              />
+                              <div className="flex flex-wrap gap-1">
+                                {QUICK_NOTES.map((qn) => (
+                                  <button
+                                    key={qn}
+                                    type="button"
+                                    onClick={() => {
+                                      updateNotes(item.id, qn);
+                                      setEditingNotesId(null);
+                                    }}
+                                    className="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[10px] text-white/80"
+                                  >
+                                    + {qn}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setEditingNotesId(item.id)}
+                                className="text-white/60 hover:text-[#F7B52C] flex items-center gap-1"
+                              >
+                                <MessageSquare className="w-3 h-3" />
+                                {item.notes ? (
+                                  <span className="text-[#F7B52C] truncate max-w-[200px]">
+                                    Note: {item.notes}
+                                  </span>
+                                ) : (
+                                  <span>+ Add kitchen note</span>
+                                )}
+                              </button>
+                              <span className="font-extrabold text-sm text-[#F7B52C]">
+                                ₹{item.price * item.quantity}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Pickup Slot Selection */}
-                  <div className="p-4 rounded-xl bg-[#1C0D12] border border-[#3E1220] space-y-2.5">
+                  {/* SMART PICKUP SLOTS & CROWD MANAGEMENT */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-[#F7B52C]" /> Pickup Time Slot
-                      </label>
-                      <span className="text-[11px] text-[#F7B52C] font-semibold">{pickupSlot}</span>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-[#F7B52C]" />
+                        <span className="text-xs font-black uppercase tracking-wider text-[#F7B52C]">
+                          Choose Pickup Slot
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-white/50">Max 20 per slot</span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                      {PRESET_SLOTS.map((slot) => (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => setPickupSlot(slot)}
-                          className={`px-2 py-1.5 rounded-lg text-xs font-semibold border transition-all text-center ${
-                            pickupSlot === slot
-                              ? 'bg-[#3E1220] border-[#F7B52C] text-[#F7B52C] shadow-sm'
-                              : 'bg-[#120A0C] border-[#3E1220] text-[#FFF8EE]/70 hover:border-[#F7B52C]/30'
-                          }`}
-                        >
-                          {slot}
-                        </button>
-                      ))}
+
+                    <p className="text-[11px] text-white/70">
+                      Cap on orders per slot prevents crowd surges during break times.
+                    </p>
+
+                    {/* Slot selector grid */}
+                    <div className="space-y-1.5">
+                      {PICKUP_SLOTS.map((slot) => {
+                        const isSelected = pickupSlot === slot.label;
+                        const isFull = slot.status === 'full' || slot.booked >= slot.capacity;
+                        const availableSpaces = Math.max(0, slot.capacity - slot.booked);
+
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            disabled={isFull}
+                            onClick={() => setPickupSlot(slot.label, slot.id)}
+                            className={`w-full p-2.5 rounded-xl text-left border flex items-center justify-between transition-all ${
+                              isSelected
+                                ? 'bg-[#F7B52C] text-[#120A0C] border-[#F7B52C] font-bold shadow-[0_0_12px_rgba(247,181,44,0.35)]'
+                                : isFull
+                                ? 'bg-red-950/20 text-white/35 border-red-500/20 cursor-not-allowed'
+                                : 'bg-black/30 text-white/90 border-white/10 hover:border-white/30'
+                            }`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-xs font-extrabold flex items-center gap-1.5">
+                                {slot.label}
+                                {slot.breakTag && (
+                                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${
+                                    isSelected ? 'bg-black/20 text-black' : 'bg-white/10 text-[#F7B52C]'
+                                  }`}>
+                                    {slot.breakTag}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+
+                            <div className="text-[11px] font-bold">
+                              {isFull ? (
+                                <span className="text-rose-400 flex items-center gap-1">
+                                  🔴 Fully Booked
+                                </span>
+                              ) : availableSpaces <= 6 ? (
+                                <span className={isSelected ? 'text-black' : 'text-amber-400'}>
+                                  🟡 {availableSpaces} spaces left
+                                </span>
+                              ) : (
+                                <span className={isSelected ? 'text-black' : 'text-emerald-400'}>
+                                  🟢 {availableSpaces} spaces
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
+
+                    {hasHeavyItem && (
+                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2 text-[11px] text-amber-200">
+                        <AlertCircle className="w-3.5 h-3.5 text-[#F7B52C] shrink-0" />
+                        <span>Biryani & special items take ~10 min slow dum prep.</span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Customer Information (Name & Mobile for Token / WhatsApp Alert) */}
-                  <div className="p-4 rounded-xl bg-[#1C0D12] border border-[#3E1220] space-y-3">
-                    <div className="text-xs font-bold text-white uppercase tracking-wider">
-                      Pickup Customer Details
-                    </div>
+                  {/* Student / Customer Pickup Info */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                    <span className="text-xs font-black uppercase tracking-wider text-white/80 flex items-center gap-1.5">
+                      <GraduationCap className="w-4 h-4 text-[#F7B52C]" />
+                      Student Pickup Verification
+                    </span>
+
                     <div className="space-y-2">
-                      <div className="relative">
-                        <User className="w-4 h-4 text-[#FFF8EE]/40 absolute left-3 top-2.5" />
+                      <div>
                         <input
                           type="text"
+                          placeholder="Student Name *"
                           value={customerName}
-                          onChange={(e) => setCustomerInfo(e.target.value, customerPhone)}
-                          placeholder="Your Name (e.g. Rahul)"
-                          className="w-full text-xs pl-9 pr-3 py-2 rounded-xl bg-[#120A0C] border border-[#3E1220] text-white focus:outline-none focus:border-[#F7B52C]"
+                          onChange={(e) => setCustomerInfo(e.target.value, customerPhone, studentId, department)}
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#F7B52C]"
                         />
                       </div>
-                      <div className="relative">
-                        <Phone className="w-4 h-4 text-[#FFF8EE]/40 absolute left-3 top-2.5" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Student ID (RATH2024CS042)"
+                          value={studentId}
+                          onChange={(e) => setCustomerInfo(customerName, customerPhone, e.target.value, department)}
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-xs font-mono text-white placeholder-white/30 focus:outline-none focus:border-[#F7B52C]"
+                        />
                         <input
                           type="tel"
+                          placeholder="WhatsApp Phone (10 digits) *"
                           value={customerPhone}
-                          onChange={(e) => setCustomerInfo(customerName, e.target.value)}
-                          placeholder="Mobile Number (10 digits for token SMS/WhatsApp)"
-                          className="w-full text-xs pl-9 pr-3 py-2 rounded-xl bg-[#120A0C] border border-[#3E1220] text-white focus:outline-none focus:border-[#F7B52C]"
+                          onChange={(e) => setCustomerInfo(customerName, e.target.value, studentId, department)}
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#F7B52C]"
                         />
                       </div>
-                      {phoneError && (
-                        <p className="text-[11px] text-rose-400 font-semibold">{phoneError}</p>
-                      )}
                     </div>
+
+                    {formError && (
+                      <p className="text-xs text-red-400 font-bold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> {formError}
+                      </p>
+                    )}
                   </div>
 
                   {/* Coupon Code Section */}
-                  <div className="p-3.5 rounded-xl bg-[#1C0D12] border border-[#3E1220] space-y-2">
-                    <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-[#F7B52C]" /> Offers & Promo Code
-                      </span>
-                      {couponCode && (
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-white/80 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-[#F7B52C]" />
+                      Campus Coupon
+                    </span>
+
+                    {couponCode ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs">
+                        <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Code {couponCode} applied (-₹{discount})
+                        </span>
                         <button
+                          type="button"
                           onClick={removeCoupon}
-                          className="text-[10px] text-rose-400 hover:underline"
+                          className="text-red-400 hover:text-red-300 font-bold text-[11px]"
                         >
                           Remove
                         </button>
-                      )}
-                    </div>
-
-                    {couponCode ? (
-                      <div className="p-2 rounded-lg bg-emerald-950/60 border border-emerald-600/50 text-xs text-emerald-300 flex items-center justify-between">
-                        <span className="font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> {couponCode} APPLIED
-                        </span>
-                        <span className="font-extrabold">-₹{discount}</span>
                       </div>
                     ) : (
                       <form onSubmit={handleApplyCoupon} className="flex gap-2">
                         <input
                           type="text"
+                          placeholder="Try COLLEGE10 or ZCAFE50"
                           value={inputCoupon}
-                          onChange={(e) => setInputCoupon(e.target.value.toUpperCase())}
-                          placeholder="Try ZCAFE50 or FIRST10"
-                          className="flex-1 text-xs px-3 py-1.5 rounded-lg bg-[#120A0C] border border-[#3E1220] text-white uppercase font-bold focus:outline-none focus:border-[#F7B52C]"
+                          onChange={(e) => setInputCoupon(e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#F7B52C]"
                         />
                         <button
                           type="submit"
-                          className="px-3 py-1.5 rounded-lg bg-[#3E1220] hover:bg-[#5A1A2B] text-[#F7B52C] font-bold text-xs border border-[#F7B52C]/40"
+                          className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[#FFF8EE] text-xs font-bold border border-white/15"
                         >
                           Apply
                         </button>
@@ -364,63 +433,61 @@ export const CartDrawer: React.FC = () => {
                     )}
 
                     {couponFeedback && (
-                      <p
-                        className={`text-[11px] ${
-                          couponFeedback.isError ? 'text-rose-400' : 'text-emerald-400'
-                        }`}
-                      >
+                      <p className={`text-[11px] font-semibold ${couponFeedback.isError ? 'text-red-400' : 'text-emerald-400'}`}>
                         {couponFeedback.message}
                       </p>
                     )}
+                  </div>
+
+                  {/* Bill Summary */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
+                    <div className="flex justify-between text-white/70">
+                      <span>Subtotal</span>
+                      <span>₹{subtotal}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-emerald-400 font-semibold">
+                        <span>Coupon Discount</span>
+                        <span>-₹{discount}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-white/70">
+                      <span>Canteen GST (5%)</span>
+                      <span>₹{gst}</span>
+                    </div>
+                    <div className="pt-2 border-t border-white/10 flex justify-between text-base font-black text-[#F7B52C]">
+                      <span>Grand Total</span>
+                      <span>₹{total}</span>
+                    </div>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Bill Summary & Sticky Checkout Bar */}
+            {/* Footer Checkout CTA */}
             {items.length > 0 && (
-              <div className="p-5 border-t border-[#3E1220] bg-[#120A0C] space-y-3">
-                <div className="space-y-1.5 text-xs text-[#FFF8EE]/70">
-                  <div className="flex justify-between">
-                    <span>Item Subtotal</span>
-                    <span className="font-semibold text-white">₹{subtotal}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-emerald-400">
-                      <span>Promo Discount</span>
-                      <span>-₹{discount}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span>GST (5% Indian Restaurant Tax)</span>
-                    <span className="font-semibold text-white">₹{gst}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-[#3E1220]">
-                    <span>To Pay</span>
-                    <span className="text-[#F7B52C] text-lg">₹{total}</span>
-                  </div>
-                </div>
-
+              <div className="p-5 border-t border-white/10 bg-[#16080d] space-y-3">
                 <button
                   type="button"
                   onClick={handleProceedToPayment}
-                  className="w-full btn-gold-pill text-sm py-3 font-extrabold flex items-center justify-center gap-2 shadow-glow-gold"
+                  className="w-full py-4 px-6 rounded-2xl font-black text-sm sm:text-base flex items-center justify-between bg-gradient-to-r from-[#F7B52C] via-[#FF9F1C] to-[#F7B52C] text-[#120A0C] shadow-[0_10px_35px_rgba(247,181,44,0.4)] hover:brightness-110 active:scale-[0.98] transition-all"
                 >
-                  <span>Pay ₹{total} via Razorpay</span>
-                  <span className="text-xs font-normal opacity-80">(UPI, GPay, Card)</span>
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5" />
+                    <span>Proceed to Pay & Get QR</span>
+                  </div>
+                  <span className="text-base font-black">₹{total}</span>
                 </button>
-
-                <p className="text-center text-[10px] text-[#FFF8EE]/50 flex items-center justify-center gap-1">
-                  🔒 Secure 256-bit encrypted Indian payment gateway
+                <p className="text-[11px] text-center text-white/50">
+                  Instant QR code token generated upon payment confirmation.
                 </p>
               </div>
             )}
-
           </div>
         </div>
       </div>
 
-      {/* Razorpay Interactive Checkout Modal */}
+      {/* Razorpay / Mock Payment Modal */}
       {showCheckoutModal && (
         <RazorpayModal
           onClose={() => setShowCheckoutModal(false)}
