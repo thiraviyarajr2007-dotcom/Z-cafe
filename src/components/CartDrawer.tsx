@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
   X, 
@@ -171,14 +172,29 @@ export const CartDrawer: React.FC = () => {
                         className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-white/20 transition-all"
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2.5 flex-1">
-                            <VegBadge isVeg={item.isVeg} size="sm" />
-                            <div>
-                              <h4 className="font-bold text-sm text-[#FFF8EE] leading-snug">
-                                {item.name}
-                              </h4>
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/10 bg-[#120A0C]">
+                              {item.image ? (
+                                <Image
+                                  src={item.image}
+                                  alt={item.name}
+                                  fill
+                                  sizes="48px"
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs">🍽️</div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <VegBadge isVeg={item.isVeg} size="sm" />
+                                <h4 className="font-bold text-sm text-[#FFF8EE] leading-snug truncate">
+                                  {item.name}
+                                </h4>
+                              </div>
                               {item.selectedSize && (
-                                <span className="inline-block text-[11px] text-[#F7B52C] font-semibold">
+                                <span className="inline-block text-[11px] text-[#F7B52C] font-semibold mt-0.5">
                                   {item.selectedSize}
                                 </span>
                               )}

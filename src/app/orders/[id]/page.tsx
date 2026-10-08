@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { 
@@ -253,15 +254,26 @@ export default function OrderTrackingPage() {
               <div className="space-y-3">
                 {order.items.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <VegBadge isVeg={item.isVeg} size="sm" />
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-white/10 bg-[#120A0C]">
+                        <Image
+                          src={`/menu/${item.menuItemId}.webp`}
+                          alt={item.name}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      </div>
                       <div>
-                        <span className="font-bold text-white">{item.name}</span>
-                        {item.size && (
-                          <span className="text-xs text-[#F7B52C] ml-1.5">({item.size})</span>
-                        )}
+                        <div className="flex items-center gap-1.5">
+                          <VegBadge isVeg={item.isVeg} size="sm" />
+                          <span className="font-bold text-white">{item.name}</span>
+                          {item.size && (
+                            <span className="text-xs text-[#F7B52C] font-semibold">({item.size})</span>
+                          )}
+                        </div>
                         {item.notes && (
-                          <div className="text-[11px] text-white/50 italic">
+                          <div className="text-[11px] text-white/50 italic mt-0.5">
                             Note: {item.notes}
                           </div>
                         )}
